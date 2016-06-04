@@ -1,4 +1,4 @@
-# sshexec - A simple Go library for executing SSH commands
+# sshexec - Go library for executing SSH commands
 
 This is a simple Go library for starting an SSH client agent and
 executing a set of commands based on host and credentials in a
