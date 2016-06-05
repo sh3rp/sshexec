@@ -18,7 +18,7 @@ func main() {
 	agent.RunWithCreds("user", "password", "localhost", 22, "id")
 	agent.RunWithCreds("user", "password", "localhost", 22, "ls -al")
 
-	// spin while waiting
+	// spin
 
 	for {
 		time.Sleep(1000)

@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/satori/go.uuid"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -20,6 +22,7 @@ type HostSession struct {
 // result of the command execution
 
 type ExecResult struct {
+	Id        uuid.UUID
 	Host      string
 	Command   string
 	Result    bytes.Buffer
@@ -29,7 +32,7 @@ type ExecResult struct {
 
 // execute the command and return a result structure
 
-func (exec *HostSession) Exec(command string) (*ExecResult, error) {
+func (exec *HostSession) Exec(id uuid.UUID, command string) (*ExecResult, error) {
 	config := &ssh.ClientConfig{
 		User: exec.Username,
 		Auth: []ssh.AuthMethod{
@@ -62,6 +65,7 @@ func (exec *HostSession) Exec(command string) (*ExecResult, error) {
 	end := time.Now()
 
 	result := &ExecResult{
+		Id:        id,
 		Host:      exec.Hostname,
 		Command:   command,
 		Result:    b,

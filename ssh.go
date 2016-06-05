@@ -1,6 +1,10 @@
 package sshexec
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/satori/go.uuid"
+)
 
 //
 // Main agent struct
@@ -25,30 +29,32 @@ func NewAgent() *SSHExecAgent {
 // Runs a command with specified credentials (username/password)
 //
 
-func (agent *SSHExecAgent) RunWithCreds(username string, password string, hostname string, port int, command string) {
+func (agent *SSHExecAgent) RunWithCreds(username string, password string, hostname string, port int, command string) *uuid.UUID {
 	session := &HostSession{
 		Username: username,
 		Password: password,
 		Hostname: hostname,
 		Port:     port,
 	}
-	agent.RunWithSession(session, command)
+	return agent.RunWithSession(session, command)
 }
 
 //
 // Runs a command with a specified session
 //
 
-func (agent *SSHExecAgent) RunWithSession(session *HostSession, command string) {
-	go func() {
-		r, err := session.Exec(command)
+func (agent *SSHExecAgent) RunWithSession(session *HostSession, command string) *uuid.UUID {
+	id := uuid.NewV4()
+	go func(uuid uuid.UUID) {
+		r, err := session.Exec(uuid, command)
 
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}
 
 		agent.results <- r
-	}()
+	}(id)
+	return &id
 }
 
 //
