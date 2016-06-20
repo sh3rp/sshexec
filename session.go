@@ -2,6 +2,8 @@ package sshexec
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
 	"strconv"
 	"time"
 
@@ -14,8 +16,8 @@ import (
 
 type HostSession struct {
 	Username string
-	Password string
 	Hostname string
+	Signers  []ssh.Signer
 	Port     int
 }
 
@@ -32,15 +34,8 @@ type ExecResult struct {
 
 // execute the command and return a result structure
 
-func (exec *HostSession) Exec(id uuid.UUID, command string) (*ExecResult, error) {
-	config := &ssh.ClientConfig{
-		User: exec.Username,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(exec.Password),
-		},
-	}
-
-	client, err := ssh.Dial("tcp", exec.Hostname+":"+strconv.Itoa(exec.Port), config)
+func (exec *HostSession) Exec(id uuid.UUID, command string, config ssh.ClientConfig) (*ExecResult, error) {
+	client, err := ssh.Dial("tcp", exec.Hostname+":"+strconv.Itoa(exec.Port), &config)
 
 	if err != nil {
 		return nil, err
@@ -74,4 +69,22 @@ func (exec *HostSession) Exec(id uuid.UUID, command string) (*ExecResult, error)
 	}
 
 	return result, nil
+}
+
+func (exec *HostSession) GenerateConfig() ssh.ClientConfig {
+	return ssh.ClientConfig{
+		User: exec.Username,
+		Auth: []ssh.AuthMethod{ssh.PublicKeys(exec.Signers...)},
+	}
+}
+
+func readKey(filename string) (ssh.Signer, error) {
+	f, _ := os.Open(filename)
+
+	bytes, _ := ioutil.ReadAll(f)
+	return generateKey(bytes)
+}
+
+func generateKey(keyData []byte) (ssh.Signer, error) {
+	return ssh.ParsePrivateKey(keyData)
 }
