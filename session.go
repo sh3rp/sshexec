@@ -16,6 +16,7 @@ import (
 
 type HostSession struct {
 	Username string
+	Password string
 	Hostname string
 	Signers  []ssh.Signer
 	Port     int
@@ -72,10 +73,22 @@ func (exec *HostSession) Exec(id uuid.UUID, command string, config ssh.ClientCon
 }
 
 func (exec *HostSession) GenerateConfig() ssh.ClientConfig {
-	return ssh.ClientConfig{
-		User: exec.Username,
-		Auth: []ssh.AuthMethod{ssh.PublicKeys(exec.Signers...)},
+	var auths []ssh.AuthMethod
+
+	if len(exec.Password) != 0 {
+		auths = append(auths, ssh.Password(exec.Password))
+	} else {
+		auths = append(auths, ssh.PublicKeys(exec.Signers...))
 	}
+
+	config := ssh.ClientConfig{
+		User: exec.Username,
+		Auth: auths,
+	}
+
+	config.Ciphers = []string{"aes128-cbc", "3des-cbc"}
+
+	return config
 }
 
 func readKey(filename string) (ssh.Signer, error) {

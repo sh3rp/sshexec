@@ -1,7 +1,8 @@
 package sshexec
 
 import (
-	"github.com/op/go-logging"
+	"log"
+
 	"github.com/satori/go.uuid"
 )
 
@@ -13,26 +14,26 @@ type SSHExecAgent struct {
 	results   chan *ExecResult
 	listeners []func(*ExecResult)
 	running   bool
-	logger    *logging.Logger
 }
 
 // constructor
 
 func NewAgent() *SSHExecAgent {
-	return &SSHExecAgent{
+	agent := &SSHExecAgent{
 		results: make(chan *ExecResult, 100),
 		running: false,
-		logger:  logging.MustGetLogger("agent"),
 	}
+	return agent
 }
 
 //
 // Runs a command with specified credentials (username/password)
 //
 
-func (agent *SSHExecAgent) RunWithCreds(username string, hostname string, port int, command string) *uuid.UUID {
+func (agent *SSHExecAgent) RunWithCreds(username string, password string, hostname string, port int, command string) *uuid.UUID {
 	session := &HostSession{
 		Username: username,
+		Password: password,
 		Hostname: hostname,
 		Port:     port,
 	}
@@ -49,7 +50,7 @@ func (agent *SSHExecAgent) RunWithSession(session *HostSession, command string) 
 		r, err := session.Exec(uuid, command, session.GenerateConfig())
 
 		if err != nil {
-			agent.logger.Debug("Error: %v\n", err)
+			log.Printf("Error: %v\n", err)
 		}
 
 		agent.results <- r
