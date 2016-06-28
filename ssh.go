@@ -23,6 +23,7 @@ func NewAgent() *SSHExecAgent {
 		results: make(chan *ExecResult, 100),
 		running: false,
 	}
+	agent.Start()
 	return agent
 }
 
@@ -52,7 +53,6 @@ func (agent *SSHExecAgent) RunWithSession(session *HostSession, command string) 
 		if err != nil {
 			log.Printf("Error: %v\n", err)
 		}
-
 		agent.results <- r
 	}(id)
 	return &id
@@ -71,6 +71,10 @@ func (agent *SSHExecAgent) AddListener(f func(*ExecResult)) {
 //
 
 func (agent *SSHExecAgent) Start() {
+	if agent.running {
+		return
+	}
+
 	agent.running = true
 	go func() {
 		for agent.running {
